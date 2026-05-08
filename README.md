@@ -1,1 +1,360 @@
-# claude-advisor
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Ecosystem Advisor</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0A0A0A;color:#E8E8E8;min-height:100vh}
+  .header{background:#111;border-bottom:1px solid #1E1E1E;padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+  .logo{width:32px;height:32px;background:linear-gradient(135deg,#CC785C,#E8A87C);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
+  .header-text{font-size:15px;font-weight:600;color:#fff}
+  .header-sub{font-size:11px;color:#555;margin-top:1px}
+  .header-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .key-input{background:#1A1A1A;border:1px solid #2A2A2A;border-radius:8px;padding:6px 12px;color:#888;font-size:11px;width:240px;outline:none;font-family:monospace}
+  .key-input:focus{border-color:#444;color:#CCC}
+  .key-badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:600}
+  .key-ok{background:#3DD68C20;border:1px solid #3DD68C40;color:#3DD68C}
+  .key-no{background:#FF3B3020;border:1px solid #FF3B3040;color:#FF6B6B}
+  .main{max-width:800px;margin:0 auto;padding:28px 20px}
+  .input-card{background:#111;border:1px solid #1E1E1E;border-radius:12px;padding:18px 20px;margin-bottom:16px}
+  .section-label{font-size:10px;color:#444;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px}
+  textarea{width:100%;background:transparent;border:none;outline:none;color:#E8E8E8;font-size:14px;line-height:1.7;resize:none;min-height:90px;font-family:inherit}
+  .input-footer{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #1A1A1A;margin-top:10px}
+  .hint{font-size:11px;color:#444}
+  .btn-primary{background:linear-gradient(135deg,#CC785C,#E8A87C);border:none;border-radius:8px;padding:9px 22px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.15s}
+  .btn-primary:hover{opacity:0.9}
+  .btn-primary:disabled{opacity:0.35;cursor:not-allowed}
+  .examples-section{margin-bottom:20px}
+  .ex-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .ex-btn{background:#0D0D0D;border:1px solid #1A1A1A;border-radius:8px;padding:9px 12px;color:#666;font-size:12px;cursor:pointer;text-align:left;transition:all 0.1s;line-height:1.4}
+  .ex-btn:hover{border-color:#2A2A2A;color:#AAA;background:#111}
+  .loading{text-align:center;padding:48px 0;display:none}
+  .spinner{width:32px;height:32px;border:2px solid #1E1E1E;border-top-color:#CC785C;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{font-size:13px;color:#555}
+  .error-box{background:#FF3B3010;border:1px solid #FF3B3030;border-radius:8px;padding:12px 16px;font-size:13px;color:#FF6B6B;margin-bottom:16px;display:none}
+  .result{display:none}
+  .result-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #1A1A1A}
+  .result-title{font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.02em;flex:1}
+  .badge{font-size:11px;padding:4px 12px;border-radius:20px;font-weight:600;border:1px solid transparent}
+  .badge-green{background:#3DD68C15;border-color:#3DD68C30;color:#3DD68C}
+  .badge-amber{background:#F5A62315;border-color:#F5A62330;color:#F5A623}
+  .badge-purple{background:#BF7FFF15;border-color:#BF7FFF30;color:#BF7FFF}
+  .badge-gray{background:#33333350;border-color:#44444450;color:#888}
+  .card{background:#111;border:1px solid #1E1E1E;border-radius:12px;padding:16px 18px;margin-bottom:10px}
+  .card-accent{border-left:3px solid #CC785C;border-radius:0 12px 12px 0}
+  .primary-row{display:flex;align-items:flex-start;gap:14px}
+  .prod-icon{width:44px;height:44px;border-radius:10px;background:#CC785C20;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .prod-name{font-size:16px;font-weight:700;color:#E8A87C;margin-bottom:4px}
+  .prod-reason{font-size:13px;color:#888;line-height:1.6}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+  .row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid #1A1A1A}
+  .row:last-child{border-bottom:none;padding-bottom:0}
+  .row-name{font-size:12px;font-weight:600;color:#CCC;min-width:115px;flex-shrink:0}
+  .row-desc{font-size:12px;color:#666;line-height:1.5}
+  .dot{width:5px;height:5px;border-radius:50%;background:#CC785C;flex-shrink:0;margin-top:6px}
+  .workflow-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .step{background:#0D0D0D;border:1px solid #1A1A1A;border-radius:8px;padding:9px 12px;display:flex;gap:8px;align-items:flex-start}
+  .step-num{width:20px;height:20px;border-radius:50%;background:#CC785C25;border:1px solid #CC785C50;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#CC785C;flex-shrink:0;margin-top:1px}
+  .step-action{font-size:12px;font-weight:500;color:#DDD}
+  .step-where{font-size:10px;color:#555;margin-top:2px}
+  .arrow{font-size:12px;color:#333}
+  .bp-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .bp-item{display:flex;gap:8px;align-items:flex-start;background:#0D0D0D;border-radius:8px;padding:9px 10px}
+  .bp-check{color:#3DD68C;font-size:13px;flex-shrink:0;margin-top:1px}
+  .bp-text{font-size:12px;color:#999;line-height:1.5}
+  .prompt-card{background:#0D1A0D;border:1px solid #3DD68C25;border-radius:12px;padding:16px 18px;margin-bottom:10px}
+  .prompt-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .prompt-label{font-size:10px;color:#3DD68C80;font-weight:600;letter-spacing:0.08em;text-transform:uppercase}
+  .copy-btn{background:#111;border:1px solid #2A2A2A;border-radius:6px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;color:#666;transition:all 0.15s}
+  .copy-btn:hover{color:#CCC;border-color:#444}
+  .copy-btn.copied{color:#3DD68C;border-color:#3DD68C40;background:#3DD68C10}
+  .prompt-text{font-size:13px;color:#A8C4A8;line-height:1.8;font-style:italic;white-space:pre-wrap}
+  .tip-card{background:#CC785C08;border:1px solid #CC785C20;border-radius:8px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+  .tip-icon{font-size:16px;flex-shrink:0}
+  .tip-text{font-size:12px;color:#CC785C;line-height:1.6}
+  .actions{display:flex;gap:8px;justify-content:center;padding-top:4px}
+  .btn-secondary{background:transparent;border:1px solid #2A2A2A;border-radius:8px;padding:8px 20px;color:#666;font-size:13px;cursor:pointer;transition:all 0.15s}
+  .btn-secondary:hover{border-color:#444;color:#AAA}
+  .share-card{background:#111;border:1px solid #1E1E1E;border-radius:12px;padding:14px 18px;margin-bottom:10px}
+  .share-btn{background:#1A1A2E;border:1px solid #2A2A4E;border-radius:8px;padding:7px 16px;color:#7B9EFF;font-size:12px;font-weight:600;cursor:pointer;margin-top:8px}
+  .share-btn:hover{background:#1E1E3E}
+  @media(max-width:600px){.grid2,.bp-grid,.ex-grid{grid-template-columns:1fr}.key-input{width:160px}.workflow-row{flex-direction:column}}
+</style>
+</head>
+<body>
+ 
+<div class="header">
+  <div class="logo">C</div>
+  <div>
+    <div class="header-text">Claude Ecosystem Advisor</div>
+    <div class="header-sub">Inserisci il caso → ricevi prodotto, workflow e prompt ottimali</div>
+  </div>
+  <div class="header-right">
+    <span id="key-badge" class="key-badge key-no">API key mancante</span>
+    <input class="key-input" id="api-key" type="password" placeholder="Incolla la tua API key sk-ant-..." oninput="checkKey()" />
+  </div>
+</div>
+ 
+<div class="main">
+ 
+  <div class="input-card">
+    <div class="section-label">Descrivi cosa devi fare</div>
+    <textarea id="inp" placeholder="Es: Devo preparare una proposta per un cliente IT a Dubai, partendo dai dati Excel e creando una presentazione professionale da condividere con il team..."></textarea>
+    <div class="input-footer">
+      <span class="hint">Ctrl+Enter per analizzare</span>
+      <button class="btn-primary" id="btn-analyze" onclick="analyze()" disabled>Analizza →</button>
+    </div>
+  </div>
+ 
+  <div class="examples-section">
+    <div class="section-label">Esempi rapidi</div>
+    <div class="ex-grid">
+      <button class="ex-btn" onclick="fill(this)">Report mensile NetApp con dati Excel e presentazione per il cliente</button>
+      <button class="ex-btn" onclick="fill(this)">Email di follow-up a un prospect IT a Dubai dopo primo incontro</button>
+      <button class="ex-btn" onclick="fill(this)">One-pager professionale per presentare CLT ad aziende italiane negli Emirati</button>
+      <button class="ex-btn" onclick="fill(this)">Analizzare contratto SOW ricevuto oggi: clausole critiche e rischi</button>
+      <button class="ex-btn" onclick="fill(this)">Gestire sequenza LinkedIn BD: accettazioni, messaggi, nuove connessioni</button>
+      <button class="ex-btn" onclick="fill(this)">Strumento ricerca immobili UAE con schede pulite da condividere con clienti</button>
+    </div>
+  </div>
+ 
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Analisi ecosistema in corso...</div>
+  </div>
+ 
+  <div class="error-box" id="error-box"></div>
+ 
+  <div class="result" id="result">
+ 
+    <div class="result-header">
+      <div class="result-title" id="r-title"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="r-badges"></div>
+    </div>
+ 
+    <div class="card card-accent">
+      <div class="section-label">Prodotto principale</div>
+      <div class="primary-row">
+        <div class="prod-icon" id="r-icon"></div>
+        <div>
+          <div class="prod-name" id="r-prodname"></div>
+          <div class="prod-reason" id="r-reason"></div>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="grid2">
+      <div class="card">
+        <div class="section-label">Strumenti di supporto</div>
+        <div id="r-secondary"></div>
+      </div>
+      <div class="card">
+        <div class="section-label">Feature da attivare</div>
+        <div id="r-tools"></div>
+      </div>
+    </div>
+ 
+    <div class="card">
+      <div class="section-label">Workflow step-by-step</div>
+      <div class="workflow-row" id="r-workflow"></div>
+    </div>
+ 
+    <div class="card">
+      <div class="section-label">Best practice</div>
+      <div class="bp-grid" id="r-bp"></div>
+    </div>
+ 
+    <div class="prompt-card">
+      <div class="prompt-header">
+        <span class="prompt-label">⬡ Prompt pronto da copiare</span>
+        <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">Copia</button>
+      </div>
+      <div class="prompt-text" id="r-prompt"></div>
+    </div>
+ 
+    <div class="tip-card">
+      <span class="tip-icon">💡</span>
+      <div class="tip-text"><strong>Pro tip:</strong> <span id="r-tip"></span></div>
+    </div>
+ 
+    <div class="actions">
+      <button class="btn-secondary" onclick="resetAll()">↺ Nuova analisi</button>
+      <button class="btn-secondary" onclick="printResult()">⬇ Stampa / Salva PDF</button>
+    </div>
+ 
+  </div>
+</div>
+ 
+<script>
+const SYSTEM = `Sei un esperto dell'ecosistema Claude di Anthropic. Analizza il caso dell'utente e produci un piano operativo ottimale.
+ 
+ECOSISTEMA DISPONIBILE (maggio 2026):
+- Claude Chat (claude.ai, mobile, desktop): conversazione, analisi, email, documenti, MCP connectors, code execution, artifacts/visualizer, memory, projects, web search, deep research
+- Claude Cowork (desktop app Mac/Win): file locali, pipeline multi-app Excel→PPT, task schedulati, skills, parallel tasks, remote control mobile
+- Claude Code (terminale, VS Code, JetBrains, Slack): coding agentic, subagents, checkpoints, hooks, MCP servers, extended thinking, CI/CD
+- Claude Design (claude.ai/design, Anthropic Labs): prototipi interattivi, deck, one-pager, landing page, HTML live, export PDF/PPTX/Canva, handoff a Code
+- Claude for Excel/PowerPoint/Word (add-in M365): dentro file aperti, pipeline Excel→PPT, master slide, pivot, formule, Skills
+- Claude in Chrome (estensione): browser agent sessione reale, Gmail/Salesforce/dashboard interni, form, ricerca web
+- MCP Connectors attivi dell'utente: Google Drive, Google Calendar, Canva, Make
+- Plugin Claude Code: Skills, Agents, Commands, Hooks, MCP Servers — marketplace ufficiale Anthropic
+ 
+Rispondi SOLO con JSON valido, zero testo fuori dal JSON:
+{
+  "title": "titolo caso (max 7 parole)",
+  "complexity": "rapido|medio|complesso",
+  "timeEstimate": "es: 5 min",
+  "primary": { "product": "nome prodotto", "emoji": "emoji", "reason": "perché questo prodotto (2 righe max)" },
+  "secondary": [ { "product": "nome", "emoji": "emoji", "role": "ruolo nel workflow (1 riga)" } ],
+  "tools": [ { "name": "nome feature", "action": "cosa fare con essa (1 riga)" } ],
+  "bestPractices": ["pratica 1","pratica 2","pratica 3","pratica 4"],
+  "workflow": [ { "step": 1, "action": "azione concisa", "where": "prodotto/strumento" } ],
+  "starterPrompt": "prompt ottimale pronto da usare, scritto in prima persona, concreto e specifico al caso, 3-5 righe",
+  "tip": "insight non ovvio specifico a questo caso (1 riga)"
+}`;
+ 
+let promptText = "";
+ 
+function checkKey() {
+  const k = document.getElementById("api-key").value.trim();
+  const ok = k.startsWith("sk-ant-") && k.length > 20;
+  document.getElementById("key-badge").textContent = ok ? "✓ API key ok" : "API key mancante";
+  document.getElementById("key-badge").className = "key-badge " + (ok ? "key-ok" : "key-no");
+  document.getElementById("btn-analyze").disabled = !ok || !document.getElementById("inp").value.trim();
+}
+ 
+document.getElementById("inp").addEventListener("input", checkKey);
+document.getElementById("inp").addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) analyze();
+});
+ 
+function fill(el) {
+  document.getElementById("inp").value = el.textContent.trim();
+  checkKey();
+}
+ 
+async function analyze() {
+  const inp = document.getElementById("inp").value.trim();
+  const key = document.getElementById("api-key").value.trim();
+  if (!inp || !key) return;
+ 
+  document.getElementById("btn-analyze").disabled = true;
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("result").style.display = "none";
+  document.getElementById("error-box").style.display = "none";
+ 
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 2000,
+        system: SYSTEM,
+        messages: [{ role: "user", content: inp }]
+      })
+    });
+ 
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || "Errore API");
+    }
+ 
+    const data = await res.json();
+    const raw = (data.content || []).find(b => b.type === "text")?.text || "";
+    let clean = raw.replace(/```json|```/g, "").trim();
+    const i1 = clean.indexOf("{"), i2 = clean.lastIndexOf("}");
+    if (i1 !== -1 && i2 !== -1) clean = clean.substring(i1, i2 + 1);
+    const d = JSON.parse(clean);
+    render(d);
+  } catch(e) {
+    document.getElementById("error-box").textContent = "Errore: " + e.message + ". Controlla la API key e riprova.";
+    document.getElementById("error-box").style.display = "block";
+  } finally {
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("btn-analyze").disabled = false;
+  }
+}
+ 
+function render(d) {
+  document.getElementById("r-title").textContent = d.title || "";
+ 
+  const cxMap = { rapido: ["badge-green","Rapido"], medio: ["badge-amber","Medio"], complesso: ["badge-purple","Complesso"] };
+  const [cls, lbl] = cxMap[d.complexity] || ["badge-gray","—"];
+  const badges = document.getElementById("r-badges");
+  badges.innerHTML = `<span class="badge ${cls}">${lbl}</span>`;
+  if (d.timeEstimate) badges.innerHTML += `<span class="badge badge-gray">⏱ ${d.timeEstimate}</span>`;
+ 
+  document.getElementById("r-icon").textContent = d.primary?.emoji || "🤖";
+  document.getElementById("r-prodname").textContent = d.primary?.product || "";
+  document.getElementById("r-reason").textContent = d.primary?.reason || "";
+ 
+  document.getElementById("r-secondary").innerHTML = (d.secondary || []).map(s =>
+    `<div class="row"><span style="font-size:15px;flex-shrink:0;margin-top:2px">${s.emoji}</span><div><div style="font-size:12px;font-weight:600;color:#CCC;margin-bottom:1px">${s.product}</div><div style="font-size:11px;color:#555">${s.role}</div></div></div>`
+  ).join("");
+ 
+  document.getElementById("r-tools").innerHTML = (d.tools || []).map(t =>
+    `<div class="row"><div class="dot"></div><div><div style="font-size:12px;font-weight:600;color:#CCC;margin-bottom:1px">${t.name}</div><div style="font-size:11px;color:#555">${t.action}</div></div></div>`
+  ).join("");
+ 
+  document.getElementById("r-workflow").innerHTML = (d.workflow || []).map((w, i) =>
+    `<div class="step"><div class="step-num">${w.step}</div><div><div class="step-action">${w.action}</div><div class="step-where">${w.where}</div></div></div>${i < d.workflow.length-1 ? '<div class="arrow">›</div>' : ''}`
+  ).join("");
+ 
+  document.getElementById("r-bp").innerHTML = (d.bestPractices || []).map(p =>
+    `<div class="bp-item"><span class="bp-check">✓</span><div class="bp-text">${p}</div></div>`
+  ).join("");
+ 
+  promptText = d.starterPrompt || "";
+  document.getElementById("r-prompt").textContent = `"${promptText}"`;
+  const cb = document.getElementById("copy-btn");
+  cb.textContent = "Copia";
+  cb.classList.remove("copied");
+ 
+  document.getElementById("r-tip").textContent = d.tip || "";
+  document.getElementById("result").style.display = "block";
+  document.getElementById("result").scrollIntoView({ behavior: "smooth" });
+}
+ 
+function copyPrompt() {
+  if (!promptText) return;
+  navigator.clipboard.writeText(promptText).then(() => {
+    const btn = document.getElementById("copy-btn");
+    btn.textContent = "Copiato!";
+    btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = "Copia"; btn.classList.remove("copied"); }, 2000);
+  });
+}
+ 
+function resetAll() {
+  document.getElementById("inp").value = "";
+  document.getElementById("result").style.display = "none";
+  document.getElementById("error-box").style.display = "none";
+  checkKey();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+ 
+function printResult() {
+  window.print();
+}
+ 
+// Salva API key in localStorage per non reinserirla
+const saved = localStorage.getItem("claude_api_key");
+if (saved) {
+  document.getElementById("api-key").value = saved;
+  checkKey();
+}
+document.getElementById("api-key").addEventListener("change", () => {
+  const k = document.getElementById("api-key").value.trim();
+  if (k.startsWith("sk-ant-")) localStorage.setItem("claude_api_key", k);
+});
+</script>
+</body>
+</html>
