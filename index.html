@@ -189,31 +189,12 @@
 </div>
  
 <script>
-const SYSTEM = `Sei un esperto dell'ecosistema Claude di Anthropic. Analizza il caso dell'utente e produci un piano operativo ottimale.
+const SYSTEM = `Sei un esperto ecosistema Claude. Rispondi SOLO con JSON valido, nessun testo fuori. Sii conciso: max 15 parole per campo.
  
-ECOSISTEMA DISPONIBILE (maggio 2026):
-- Claude Chat (claude.ai, mobile, desktop): conversazione, analisi, email, documenti, MCP connectors, code execution, artifacts/visualizer, memory, projects, web search, deep research
-- Claude Cowork (desktop app Mac/Win): file locali, pipeline multi-app Excel→PPT, task schedulati, skills, parallel tasks, remote control mobile
-- Claude Code (terminale, VS Code, JetBrains, Slack): coding agentic, subagents, checkpoints, hooks, MCP servers, extended thinking, CI/CD
-- Claude Design (claude.ai/design, Anthropic Labs): prototipi interattivi, deck, one-pager, landing page, HTML live, export PDF/PPTX/Canva, handoff a Code
-- Claude for Excel/PowerPoint/Word (add-in M365): dentro file aperti, pipeline Excel→PPT, master slide, pivot, formule, Skills
-- Claude in Chrome (estensione): browser agent sessione reale, Gmail/Salesforce/dashboard interni, form, ricerca web
-- MCP Connectors attivi dell'utente: Google Drive, Google Calendar, Canva, Make
-- Plugin Claude Code: Skills, Agents, Commands, Hooks, MCP Servers — marketplace ufficiale Anthropic
+Prodotti disponibili: Chat(claude.ai/mobile/desktop), Cowork(desktop-app file+automazione), Code(sviluppo terminale/VS Code), Design(claude.ai/design prototipi+deck), Excel/PPT/Word(M365 add-in), Chrome(browser agent sessione reale). MCP attivi utente: Drive, Calendar, Canva, Make.
  
-Rispondi SOLO con JSON valido, zero testo fuori dal JSON:
-{
-  "title": "titolo caso (max 7 parole)",
-  "complexity": "rapido|medio|complesso",
-  "timeEstimate": "es: 5 min",
-  "primary": { "product": "nome prodotto", "emoji": "emoji", "reason": "perché questo prodotto (2 righe max)" },
-  "secondary": [ { "product": "nome", "emoji": "emoji", "role": "ruolo nel workflow (1 riga)" } ],
-  "tools": [ { "name": "nome feature", "action": "cosa fare con essa (1 riga)" } ],
-  "bestPractices": ["pratica 1","pratica 2","pratica 3","pratica 4"],
-  "workflow": [ { "step": 1, "action": "azione concisa", "where": "prodotto/strumento" } ],
-  "starterPrompt": "prompt ottimale pronto da usare, scritto in prima persona, concreto e specifico al caso, 3-5 righe",
-  "tip": "insight non ovvio specifico a questo caso (1 riga)"
-}`;
+Restituisci ESATTAMENTE questo JSON chiuso correttamente:
+{"title":"titolo 5 parole max","complexity":"rapido|medio|complesso","timeEstimate":"X min","primary":{"product":"nome prodotto","emoji":"1 emoji","reason":"perche questo prodotto max 12 parole"},"secondary":[{"product":"nome","emoji":"emoji","role":"ruolo max 8 parole"},{"product":"nome","emoji":"emoji","role":"ruolo max 8 parole"}],"tools":[{"name":"feature","action":"cosa fare max 8 parole"},{"name":"feature","action":"cosa fare max 8 parole"},{"name":"feature","action":"cosa fare max 8 parole"}],"bestPractices":["pratica max 10 parole","pratica max 10 parole","pratica max 10 parole"],"workflow":[{"step":1,"action":"azione max 5 parole","where":"prodotto"},{"step":2,"action":"azione max 5 parole","where":"prodotto"},{"step":3,"action":"azione max 5 parole","where":"prodotto"}],"starterPrompt":"prompt pratico in prima persona max 40 parole","tip":"insight non ovvio max 15 parole"}``;
  
 let promptText = "";
  
@@ -256,7 +237,7 @@ async function analyze() {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 1200,
+        max_tokens: 1000,
         system: SYSTEM,
         messages: [{ role: "user", content: inp }]
       })
@@ -269,7 +250,9 @@ async function analyze() {
  
     const data = await res.json();
     const raw = (data.content || []).find(b => b.type === "text")?.text || "";
-    const clean = raw.replace(/```json|```/g, "").trim();
+    let clean = raw.replace(/```json|```/g, "").trim();
+    const i1 = clean.indexOf("{"), i2 = clean.lastIndexOf("}");
+    if (i1 !== -1 && i2 !== -1) clean = clean.substring(i1, i2 + 1);
     const d = JSON.parse(clean);
     render(d);
   } catch(e) {
@@ -356,4 +339,3 @@ document.getElementById("api-key").addEventListener("change", () => {
 </script>
 </body>
 </html>
- 
